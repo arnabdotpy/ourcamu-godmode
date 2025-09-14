@@ -32,11 +32,15 @@ else:
     print("Login failed. Please check your email and password.")
     exit(1)
 
-with open('user_data.json','r') as f:
-    data = json.load(f)
-    sid = data['sid']
-    json_payload = data['data']['progressionData'][0]
-    stuId = data['data']['logindetails']['Student'][0]['StuID']
+# Get user data directly from the individual user file
+user_data = get_user_data_by_email(email)
+if user_data:
+    sid = user_data['sid']
+    json_payload = user_data['json_payload']
+    stuId = user_data['student_id']
+else:
+    print("Failed to load user data!")
+    exit(1)
 
 
 async def extract_pending_attendance_classes():

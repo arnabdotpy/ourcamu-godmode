@@ -59,26 +59,29 @@ class AttendanceWorker:
     def authenticate(self):
         """Authenticate user and get session details"""
         try:
-            print(f"[{self.name}] Logging in...")
+            log_message("INFO", self.email, f"Starting authentication for {self.name}")
             login_result = login(self.email, self.password)
             
             if login_result:
-                # Read the user data that was saved
-                with open('user_data.json', 'r') as f:
-                    data = json.load(f)
-                    self.sid = data['sid']
-                    self.json_payload = data['data']['progressionData'][0]
-                    self.student_id = data['data']['logindetails']['Student'][0]['StuID']
+                # Get user data directly from the individual user file
+                user_data = get_user_data_by_email(self.email)
+                if user_data:
+                    self.sid = user_data['sid']
+                    self.json_payload = user_data['json_payload']
+                    self.student_id = user_data['student_id']
                     
-                self.is_logged_in = True
-                print(f"[{self.name}] Login successful! Student ID: {self.student_id}")
-                return True
+                    self.is_logged_in = True
+                    log_message("SUCCESS", self.email, f"{self.name} authenticated successfully! Student ID: {self.student_id}")
+                    return True
+                else:
+                    log_message("ERROR", self.email, f"Failed to load user data for {self.name}")
+                    return False
             else:
-                print(f"[{self.name}] Login failed!")
+                log_message("ERROR", self.email, f"Authentication failed for {self.name}")
                 return False
                 
         except Exception as e:
-            print(f"[{self.name}] Error during authentication: {e}")
+            log_message("ERROR", self.email, f"Error during authentication for {self.name}: {e}")
             return False
     
     async def extract_pending_attendance_classes(self):
@@ -93,7 +96,7 @@ class AttendanceWorker:
                     result[cls["PeriodId"]] = [cls["attendanceId"], cls["isAttendanceSaved"]]
                     
         except Exception as e:
-            print(f"[{self.name}] Error extracting periods: {e}")
+            log_message("ERROR", self.email, f"Error extracting periods for {self.name}: {e}")
             
         return result
     
@@ -104,32 +107,32 @@ class AttendanceWorker:
                 # Try to re-authenticate using sid method
                 self.sid = login(self.email, self.password, flag=False)
                 if not self.sid:
-                    print(f"[{self.name}] Re-authentication failed")
+                    log_message("ERROR", self.email, f"Re-authentication failed for {self.name}")
                     return False
             
             pending = await self.extract_pending_attendance_classes()
             
             if not pending:
-                print(f"[{self.name}] No pending attendance found")
+                log_message("INFO", self.email, f"No pending attendance found for {self.name}")
                 return True
                 
-            print(f"[{self.name}] Found {len(pending)} pending attendance(s)")
+            log_message("INFO", self.email, f"Found {len(pending)} pending attendance(s) for {self.name}")
             
             tasks = []
             for attendance_info in pending.values():
                 attendance_id = attendance_info[0]
-                print(f"[{self.name}] Marking attendance for ID: {attendance_id}")
+                log_message("INFO", self.email, f"Marking attendance for ID: {attendance_id} ({self.name})")
                 tasks.append(mark_attendance(self.sid, attendance_id, self.student_id))
             
             if tasks:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
                 success_count = sum(1 for result in results if result and not isinstance(result, Exception))
-                print(f"[{self.name}] Successfully marked {success_count}/{len(tasks)} attendances")
+                log_message("SUCCESS", self.email, f"{self.name} successfully marked {success_count}/{len(tasks)} attendances")
                 
             return True
             
         except Exception as e:
-            print(f"[{self.name}] Error marking attendance: {e}")
+            log_message("ERROR", self.email, f"Error marking attendance for {self.name}: {e}")
             return False
     
     async def run_attendance_loop(self):
@@ -138,14 +141,14 @@ class AttendanceWorker:
             try:
                 success = await self.mark_user_attendance()
                 if success:
-                    print(f"[{self.name}] Attendance cycle completed")
+                    log_message("INFO", self.email, f"Attendance cycle completed for {self.name}")
                 else:
-                    print(f"[{self.name}] Attendance cycle failed")
+                    log_message("WARN", self.email, f"Attendance cycle failed for {self.name}")
                     
                 await asyncio.sleep(1)  # Wait before next cycle
                 
             except Exception as e:
-                print(f"[{self.name}] Error in attendance loop: {e}")
+                log_message("ERROR", self.email, f"Error in attendance loop for {self.name}: {e}")
                 await asyncio.sleep(5)  # Wait longer on error
 
 def run_user_worker(user_info):
@@ -155,22 +158,22 @@ def run_user_worker(user_info):
         
         # Authenticate first
         if not worker.authenticate():
-            print(f"[{worker.name}] Failed to authenticate, skipping this user")
+            log_message("ERROR", user_info['email'], f"Failed to authenticate {user_info['name']}, skipping this user")
             return
             
         # Run the attendance loop
         asyncio.run(worker.run_attendance_loop())
         
     except KeyboardInterrupt:
-        print(f"[{user_info['name']}] Stopping...")
+        log_message("INFO", user_info['email'], f"Stopping worker for {user_info['name']}...")
     except Exception as e:
-        print(f"[{user_info['name']}] Worker error: {e}")
+        log_message("ERROR", user_info['email'], f"Worker error for {user_info['name']}: {e}")
 
 def main():
     """Main function to start all user threads"""
     threads = []
     
-    print(f"\nStarting attendance marking for {len(USERS)} users...\n")
+    log_message("INFO", None, f"Starting attendance marking system for {len(USERS)} users")
     
     try:
         # Create and start a thread for each user
@@ -183,28 +186,29 @@ def main():
             thread.daemon = True  # Dies when main thread dies
             thread.start()
             threads.append(thread)
+            log_message("INFO", None, f"Started worker thread for {user_info['name']}")
             
             # Small delay between starting threads to avoid overwhelming the server
             time.sleep(0.5)
         
-        print(f"All {len(threads)} worker threads started successfully!")
-        print("Press Ctrl+C to stop all workers...\n")
+        log_message("SUCCESS", None, f"All {len(threads)} worker threads started successfully!")
+        log_message("INFO", None, "Press Ctrl+C to stop all workers...")
         
         # Keep main thread alive
         for thread in threads:
             thread.join()
             
     except KeyboardInterrupt:
-        print("\n\nStopping all workers...")
+        log_message("INFO", None, "Stopping all workers...")
         # Threads will automatically stop since they're daemon threads
-        print("All workers stopped.")
+        log_message("INFO", None, "All workers stopped.")
     except Exception as e:
-        print(f"Error in main: {e}")
+        log_message("ERROR", None, f"Error in main: {e}")
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\nExiting...")
+        log_message("INFO", None, "Exiting...")
     except Exception as e:
-        print(f"Fatal error: {e}")
+        log_message("FATAL", None, f"Fatal error: {e}")
