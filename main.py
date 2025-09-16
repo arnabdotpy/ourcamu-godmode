@@ -1,19 +1,10 @@
 import asyncio
 import threading
-import json
 import time
-import os
 from timetable import *
 from markit import *
 from sid import *
 
-terminal_width = os.get_terminal_size().columns
-os.system('clear' if os.name == 'posix' else 'cls')
-pilcrow = "¶"
-padding = (terminal_width - len(pilcrow)) // 2
-centered_pilcrow = " " * padding + pilcrow
-
-print("\n"+centered_pilcrow+"\n")
 print("FUCK YOU CAMU")
 
 # List of users - add your credentials here
