@@ -11,7 +11,14 @@ The attendance bot now features a comprehensive logging system that provides det
 - **WARNING**: Important notifications that don't stop execution
 - **ERROR**: Error conditions that might affect functionality
 
-### 2. Multi-File Logging Structure
+### 2. Optimized Session Management
+- **Single Login**: Each user logs in only once at startup
+- **Session Reuse**: Existing sessions are reused throughout the process
+- **Smart Refresh**: Sessions are only refreshed when necessary (authentication errors or validation failures)
+- **Periodic Validation**: Sessions are validated every 5 minutes to ensure they're still active
+- **Error-Driven Refresh**: Sessions are refreshed automatically when session-related errors are detected
+
+### 3. Multi-File Logging Structure
 ```
 logs/
 ├── attendance_main.log       # Main application logs
@@ -62,8 +69,7 @@ logs/
 2024-12-19 10:30:17 - DEBUG - [MainThread] - Student ID: 12345
 2024-12-19 10:30:18 - INFO - [AttendanceThread-Arkade] - Thread started successfully
 2024-12-19 10:30:18 - INFO - [AttendanceThread-Arkade] - Starting attendance monitoring loop for Arkade
-2024-12-19 10:30:18 - DEBUG - [AttendanceThread-Arkade] - Refreshing session...
-2024-12-19 10:30:19 - DEBUG - [AttendanceThread-Arkade] - Session refreshed: s%3AabcdefV...
+2024-12-19 10:30:18 - DEBUG - [AttendanceThread-Arkade] - Using existing session: s%3AabcdefV...
 2024-12-19 10:30:19 - DEBUG - [AttendanceThread-Arkade] - Fetching timetable data...
 2024-12-19 10:30:20 - DEBUG - [AttendanceThread-Arkade] - Found 6 periods in timetable
 2024-12-19 10:30:20 - DEBUG - [AttendanceThread-Arkade] - Found pending attendance: Period 123, Attendance ID: ATT456
@@ -71,6 +77,11 @@ logs/
 2024-12-19 10:30:20 - INFO - [AttendanceThread-Arkade] - Starting to mark attendance for 2 classes...
 2024-12-19 10:30:21 - DEBUG - [AttendanceThread-Arkade] - Attendance marked successfully: SUCCESS for attendance ID ATT456
 2024-12-19 10:30:21 - INFO - [AttendanceThread-Arkade] - Attendance marking completed: 2/2 successful
+2024-12-19 10:35:18 - DEBUG - [AttendanceThread-Arkade] - Performing periodic session validation...
+2024-12-19 10:35:19 - DEBUG - [AttendanceThread-Arkade] - Session validation passed
+2024-12-19 11:15:18 - DEBUG - [AttendanceThread-Arkade] - Performing periodic session validation...
+2024-12-19 11:15:19 - WARNING - [AttendanceThread-Arkade] - Session validation failed, refreshing session...
+2024-12-19 11:15:20 - INFO - [AttendanceThread-Arkade] - Session refreshed successfully (refresh #1): s%3Axyz789W...
 ```
 
 ## Monitoring Tips
@@ -81,10 +92,25 @@ logs/
 tail -f logs/attendance_main.log
 
 # Watch specific user logs
-tail -f logs/attendance_arkade.log
+tail -f logs/attendance_arnab.log
 
 # Watch all logs simultaneously
 tail -f logs/*.log
+```
+
+### Session Management Monitoring
+```bash
+# Monitor session refreshes across all users
+grep -i "session refresh" logs/attendance_*.log
+
+# Check session validation frequency
+grep -i "session validation" logs/attendance_*.log
+
+# Count total session refreshes per user
+grep -c "Session refreshed successfully" logs/attendance_*.log
+
+# Find session-related errors
+grep -i "session.*error\|failed.*session" logs/attendance_*.log
 ```
 
 ### Error Investigation
