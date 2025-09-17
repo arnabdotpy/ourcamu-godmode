@@ -1,9 +1,11 @@
 import requests
+import logging
 from datetime import datetime
 
 from sid import *
 
 def fetch_timetable_headerless(sid, json_payload):
+    logger = logging.getLogger('attendance_main')
     api_url = "https://student.bennetterp.camu.in/api/Timetable/get"
     cookies = {
         "connect.sid": sid
@@ -22,18 +24,18 @@ def fetch_timetable_headerless(sid, json_payload):
     })
     
     try:
+        logger.debug(f"Fetching timetable for date: {now.strftime('%Y-%m-%d')}")
         response = requests.post(api_url, cookies=cookies, json=json_payload,timeout=5)
 
         # Check if the response status code indicates success
         if response.status_code == 200:
+            logger.debug("Timetable fetched successfully")
             return response.json()
         else:
-            print(f"Error: Received status code {response.status_code}")
-            # print(response.json())
+            logger.error(f"Error: Received status code {response.status_code}")
             return None
     except requests.RequestException as e:
-        print(f"Request failed: {e}")
-        # print(response.json())
+        logger.error(f"Request failed: {e}")
         return None
 
 # with open('user_data.json','r') as f:

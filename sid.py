@@ -1,7 +1,9 @@
 import requests
 import json
+import logging
 
 def login(email,password,flag=True)-> bool:
+    logger = logging.getLogger('attendance_main')
     login_url = "https://student.bennetterp.camu.in/login/validate"
     payload = {
         "dtype": "M",
@@ -10,24 +12,33 @@ def login(email,password,flag=True)-> bool:
     }
 
     s = requests.Session()
-    response = s.post(login_url, json=payload,timeout=10)
-    
-    if response.status_code == 200:
-        data =response.json().get("output").get('data')
-        if data.get('code')=='INCRT_CRD':
-            # print("Login failed: No data returned.")
+    try:
+        response = s.post(login_url, json=payload,timeout=10)
+        
+        if response.status_code == 200:
+            data =response.json().get("output").get('data')
+            if data.get('code')=='INCRT_CRD':
+                logger.error(f"Login failed: Incorrect credentials for {email}")
+                return None
+            data = {
+                'sid':response.cookies.get('connect.sid'),
+                'data' : data
+            }
+            if not flag:
+                logger.debug(f"Session refreshed for {email}")
+                return data['sid']
+            with open('user_data.json', 'w') as f:
+                json.dump(data,f)
+            logger.debug(f"Login successful and data saved for {email}")
+            return True
+        else:
+            logger.error(f"Failed to login: HTTP {response.status_code} for {email}")
             return None
-        data = {
-            'sid':response.cookies.get('connect.sid'),
-            'data' : data
-        }
-        if not flag:
-            return data['sid']
-        with open('user_data.json', 'w') as f:
-            json.dump(data,f)
-        return True
-    else:
-        print(f"Failed to login: {response.status_code}")
+    except requests.exceptions.Timeout:
+        logger.error(f"Login request timed out for {email}")
+        return None
+    except Exception as e:
+        logger.error(f"Unexpected error during login for {email}: {e}")
         return None
     
 #Example usage:
