@@ -133,16 +133,21 @@ def initialize_user_session(user):
     
     main_logger.info(f"Initializing session for {name} ({email})...")
     
+    # Create sessions directory if it doesn't exist
+    if not os.path.exists('sessions'):
+        os.makedirs('sessions')
+        main_logger.debug("Created sessions directory")
+    
     # Login and create user-specific data file
     login_result = login(email, password)
     if login_result:
         main_logger.info(f"Login successful for {name}!")
         
-        # Create user-specific filename
-        user_filename = f"user_data_{name.lower()}.json"
+        # Create user-specific filename in sessions folder
+        user_filename = f"sessions/user_data_{name.lower()}.json"
         
         # Read the general user_data.json that was created by login
-        with open('user_data.json','r') as f:
+        with open('sessions/user_data.json','r') as f:
             data = json.load(f)
             sid = data['sid']
             json_payload = data['data']['progressionData'][0]
@@ -157,6 +162,7 @@ def initialize_user_session(user):
         user_logger.info(f"Session initialized successfully for {name}")
         user_logger.debug(f"Session ID: {sid[:10]}...")
         user_logger.debug(f"Student ID: {stuId}")
+        user_logger.debug(f"Session data saved to: {user_filename}")
             
         user_sessions[email] = {
             'name': name,

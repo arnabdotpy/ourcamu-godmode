@@ -38,9 +38,9 @@ def fetch_timetable_headerless(sid, json_payload):
         logger.error(f"Request failed: {e}")
         return None
 
-# with open('user_data.json','r') as f:
+# Example usage (commented out):
+# with open('sessions/user_data.json','r') as f:
 #     data = json.load(f)
 #     sid = data['sid']
 #     json_payload = data['data']['progressionData'][0]
-
-#     print(fetch_timetable_headerless(sid,json_payload))
+#     print(fetch_timetable_headerless(sid, json_payload))

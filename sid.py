@@ -1,6 +1,7 @@
 import requests
 import json
 import logging
+import os
 
 def login(email,password,flag=True)-> bool:
     logger = logging.getLogger('attendance_main')
@@ -27,9 +28,15 @@ def login(email,password,flag=True)-> bool:
             if not flag:
                 logger.debug(f"Session refreshed for {email}")
                 return data['sid']
-            with open('user_data.json', 'w') as f:
+            
+            # Create sessions directory if it doesn't exist
+            if not os.path.exists('sessions'):
+                os.makedirs('sessions')
+                logger.debug("Created sessions directory")
+            
+            with open('sessions/user_data.json', 'w') as f:
                 json.dump(data,f)
-            logger.debug(f"Login successful and data saved for {email}")
+            logger.debug(f"Login successful and data saved to sessions/user_data.json for {email}")
             return True
         else:
             logger.error(f"Failed to login: HTTP {response.status_code} for {email}")
