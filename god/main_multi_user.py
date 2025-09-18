@@ -49,6 +49,7 @@ class MultiUserAttendanceBot:
             json_payload = user_data['data']['progressionData'][0]
             
             response = fetch_timetable_headerless(sid, json_payload)
+            print('response', response)
             if not response:
                 return result
                 

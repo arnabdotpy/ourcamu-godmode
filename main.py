@@ -11,26 +11,26 @@ from markit import *
 from sid import *
 
 USERS = [
-    # {
-    #     "email": "e23cseu0688@bennett.edu.in",
-    #     "password": "Arka@671",
-    #     "name": "Arkade"
-    # },
-    # {
-    #     "email": "e23cseu0705@bennett.edu.in", 
-    #     "password": "Reo@#2004",
-    #     "name": "Arnab"
-    # },
-    # {
-    #     "email": "e23cseu0679@bennett.edu.in",
-    #     "password": "U0b6K0ED",
-    #     "name": "Abhishek"
-    # },
-    # {
-    #     "email": "e23cseu0672@bennett.edu.in",
-    #     "password": "10-11-2005",
-    #     "name": "Piyush"
-    # },
+    {
+        "email": "e23cseu0688@bennett.edu.in",
+        "password": "Arka@671",
+        "name": "Arkade"
+    },
+    {
+        "email": "e23cseu0705@bennett.edu.in", 
+        "password": "Reo@#2004",
+        "name": "Arnab"
+    },
+    {
+        "email": "e23cseu0679@bennett.edu.in",
+        "password": "U0b6K0ED",
+        "name": "Abhishek"
+    },
+    {
+        "email": "e23cseu0672@bennett.edu.in",
+        "password": "10-11-2005",
+        "name": "Piyush"
+    },
     {
         "email": "e23cseu0036@bennett.edu.in",
         "password": "8lHTcGVA",

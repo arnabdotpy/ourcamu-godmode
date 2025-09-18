@@ -3,8 +3,10 @@ from timetable import *
 from markit import *
 from sid import *
 
-email = "E23CSEU2272@bennett.edu.in"
-password = "jlFjnAvQ"
+print("Enter your college email: ",end="")
+email = "e23cseu0705@bennett.edu.in"
+print("Enter your password: ",end="")
+password = "Reo@#2004"
 if not email or not password:
     print("Email and password cannot be empty.")
     exit(1)
@@ -25,7 +27,7 @@ with open('user_data.json','r') as f:
 async def extract_pending_attendance_classes():
     result = {}
     response = fetch_timetable_headerless(sid, json_payload)
-    print(response)
+    #print(type(response))
     try:
         # print(response)
         periods = response["output"]["data"][0]["Periods"]
@@ -53,7 +55,7 @@ async def autc():
                 tasks.append(asyncio.create_task(mark_attendance(sid, i[0], stuId)))
             if tasks:
                 await asyncio.gather(*tasks)
-                print(f"[INFO] Added task for {len(tasks)} classes.")
+                print("Attendance marked successfully.")
                 print("\n")
             await asyncio.sleep(1)
         except TimeoutError:
