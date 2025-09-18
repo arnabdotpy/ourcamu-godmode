@@ -1,8 +1,6 @@
 import httpx
-import logging
 
 async def mark_attendance(session_id: str, attendance_id: str, student_id: str):
-    # print(session_id, attendance_id, student_id)
     url = "https://student.bennetterp.camu.in/api/Attendance/record-online-attendance"
     headers = {
         "Cookie": f"connect.sid={session_id}",
@@ -19,30 +17,32 @@ async def mark_attendance(session_id: str, attendance_id: str, student_id: str):
         "offQrCdEnbld": True
     }
 
-    # Get logger for current thread context
-    logger = logging.getLogger('attendance_main')
-
     try:
         async with httpx.AsyncClient(timeout=15) as client:
-            print(payload)
             response = await client.post(url, headers=headers, json=payload)
             data = response.json()
-            print("data --->", data)
-            
+            pass # print(data)
             if data["output"]["data"] is not None:
                 code = data["output"]["data"]["code"]
-                if code in ["SUCCESS", "ATTENDANCE_ALREADY_RECORDED"]:
-                    logger.debug(f"Attendance marked successfully: {code} for attendance ID {attendance_id}")
+                print(code)
+                if code == "SUCCESS":
+                    print(f"✅ [SUCCESS] Marked attendance for student: {student_id}")
                     return True
-                elif code in ["INVLD_QR"]:
-                    logger.debug(f"Attendance marking failed due to invalid QR: {code} for attendance ID {attendance_id}")
-                    return False
+                elif code == "ATTENDANCE_ALREADY_RECORDED":
+                    print(f"✅ [INFO] Attendance already recorded for student: {student_id}")
+                    return True
                 else:
-                    logger.warning(f"Unexpected response code: {code} for attendance ID {attendance_id}")
+                    print(f"❌ [FAIL] Could not mark attendance for student: {student_id}. Reason: {data['output']['data']['message']}")
                     return False
+            elif data["output"]["errors"] is not None:
+                code = data["output"]["errors"]["code"]
+                if code == "INVLD_QR":
+                    print(f"❌ [FAIL] Could not mark attendance for student: {student_id}. Reason: {data['output']['errors']['message']}")
+                return False
             else:
-                logger.error(f"---> Invalid response for student: {student_id}, attendance ID: {attendance_id}")
+                pass # print(f"[FAIL] Invalid response for student: {student_id}")
+                print(f"❌ [FAIL] {data}")
                 return False
     except Exception as e:
-        logger.error(f"Error while marking attendance for student {student_id}: {e}")
+        pass # print(f"[ERROR] While marking for student {student_id}: {e}")
         return False

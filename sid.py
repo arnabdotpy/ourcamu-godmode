@@ -8,7 +8,7 @@ def validate_session(sid):
     logger = logging.getLogger('attendance_main')
     
     # Simple validation by making a lightweight API call
-    test_url = "https://student.bennetterp.camu.in/api/Profile/get-profile"
+    test_url = "https://student.bennetterp.camu.in/api/Timetable/get"
     cookies = {"connect.sid": sid}
     
     try:

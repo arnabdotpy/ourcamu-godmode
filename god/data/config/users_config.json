@@ -1,0 +1,46 @@
+{
+  "users": [
+    {
+      "name": "Arnab",
+      "email": "e23cseu0705@bennett.edu.in",
+      "password": "Reo@#2004",
+      "enabled": true
+    },
+    {
+      "name": "Arkadip",
+      "email": "e23cseu0688@bennett.edu.in",
+      "password": "Arka@671",
+      "enabled": true
+    },
+    {
+      "email": "e23cseu0688@bennett.edu.in",
+      "password": "Arka@671",
+      "name": "Arkade",
+      "enabled": true
+    },
+    {
+      "email": "e23cseu0705@bennett.edu.in",
+      "password": "Reo@#2004",
+      "name": "Arnab",
+      "enabled": true
+    },
+    {
+      "email": "e23cseu0679@bennett.edu.in",
+      "password": "U0b6K0ED",
+      "name": "Abhishek",
+      "enabled": true
+    },
+    {
+      "email": "e23cseu0672@bennett.edu.in",
+      "password": "10-11-2005",
+      "name": "Piyush",
+      "enabled": true
+    },
+    {
+      "email": "e23cseu0036@bennett.edu.in",
+      "password": "8lHTcGVA",
+      "name": "Grisha",
+      "enabled": true
+    }
+  ]
+}

@@ -11,26 +11,26 @@ from markit import *
 from sid import *
 
 USERS = [
-    {
-        "email": "e23cseu0688@bennett.edu.in",
-        "password": "Arka@671",
-        "name": "Arkade"
-    },
-    {
-        "email": "e23cseu0705@bennett.edu.in", 
-        "password": "Reo@#2004",
-        "name": "Arnab"
-    },
-    {
-        "email": "e23cseu0679@bennett.edu.in",
-        "password": "U0b6K0ED",
-        "name": "Abhishek"
-    },
-    {
-        "email": "e23cseu0672@bennett.edu.in",
-        "password": "10-11-2005",
-        "name": "Piyush"
-    },
+    # {
+    #     "email": "e23cseu0688@bennett.edu.in",
+    #     "password": "Arka@671",
+    #     "name": "Arkade"
+    # },
+    # {
+    #     "email": "e23cseu0705@bennett.edu.in", 
+    #     "password": "Reo@#2004",
+    #     "name": "Arnab"
+    # },
+    # {
+    #     "email": "e23cseu0679@bennett.edu.in",
+    #     "password": "U0b6K0ED",
+    #     "name": "Abhishek"
+    # },
+    # {
+    #     "email": "e23cseu0672@bennett.edu.in",
+    #     "password": "10-11-2005",
+    #     "name": "Piyush"
+    # },
     {
         "email": "e23cseu0036@bennett.edu.in",
         "password": "8lHTcGVA",
@@ -210,36 +210,23 @@ async def user_attendance_loop(user_session):
     
     user_logger.info(f"Starting attendance monitoring loop for {name}")
     
-    # Use the initial session ID from login
-    sid = user_session['sid']
-    session_refresh_count = 0
-    last_session_check = time.time()
-    session_check_interval = 300  # Check session validity every 5 minutes
+    loop_count = 0
     
     while True:
         try:
-            # Periodic session validation (every 5 minutes)
-            current_time = time.time()
-            if current_time - last_session_check > session_check_interval:
-                user_logger.debug("Performing periodic session validation...")
-                if not validate_session(sid):
-                    user_logger.warning("Session validation failed, refreshing session...")
-                    new_sid = login(email, password, flag=False)
-                    if new_sid:
-                        sid = new_sid
-                        user_session['sid'] = sid
-                        session_refresh_count += 1
-                        user_logger.info(f"Session refreshed successfully (refresh #{session_refresh_count}): {sid[:10]}...")
-                    else:
-                        user_logger.error("Failed to refresh session during validation, retrying in 30 seconds...")
-                        await asyncio.sleep(30)
-                        continue
-                else:
-                    user_logger.debug("Session validation passed")
-                last_session_check = current_time
+            loop_count += 1
+            user_logger.debug(f"Starting loop iteration #{loop_count}")
             
-            # Use existing session ID - no need to login every time
-            user_logger.debug(f"Using existing session: {sid[:10]}...")
+            # Login every time to get a fresh session
+            user_logger.debug("Performing fresh login...")
+            sid = login(email, password, flag=False)
+            
+            if not sid:
+                user_logger.error("Login failed, retrying in 30 seconds...")
+                await asyncio.sleep(30)
+                continue
+            
+            user_logger.debug(f"Fresh login successful: {sid[:10]}...")
             
             pending = await extract_pending_attendance_classes(sid, user_session['json_payload'], user_logger)
             
@@ -267,30 +254,11 @@ async def user_attendance_loop(user_session):
             else:
                 user_logger.debug("No pending attendance found")
                 
-            await asyncio.sleep(1)
+            await asyncio.sleep(3)
             
         except Exception as e:
-            # Check if the error might be session-related
-            error_str = str(e).lower()
-            if any(keyword in error_str for keyword in ['session', 'unauthorized', 'forbidden', 'authentication', 'invalid', '401', '403']):
-                user_logger.warning(f"Session-related error detected: {e}")
-                user_logger.info("Attempting to refresh session...")
-                
-                # Refresh session only when needed
-                new_sid = login(email, password, flag=False)
-                if new_sid:
-                    sid = new_sid
-                    user_session['sid'] = sid
-                    session_refresh_count += 1
-                    user_logger.info(f"Session refreshed successfully (refresh #{session_refresh_count}): {sid[:10]}...")
-                    last_session_check = time.time()  # Reset check timer after refresh
-                else:
-                    user_logger.error("Failed to refresh session, retrying in 30 seconds...")
-                    await asyncio.sleep(30)
-                    continue
-            else:
-                user_logger.error(f"Unexpected error while fetching attendance: {e}")
-                await asyncio.sleep(5)
+            user_logger.error(f"Unexpected error in loop iteration #{loop_count}: {e}")
+            await asyncio.sleep(5)
             continue
 def run_user_attendance(user_session):
     """Run attendance loop for a user in a thread"""
